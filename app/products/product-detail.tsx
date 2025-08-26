@@ -9,11 +9,11 @@ import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ShoppingCart, Package, Barcode, Minus, Plus } from "lucide-react"
-import { getProductById } from "@/lib/products"
 import { formatCurrency } from "@/lib/cart"
 import { Navbar } from "@/components/navbar"
 import { Breadcrumb } from "@/components/breadcrumb"
 import Link from "next/link"
+import { getProductById } from "./product-utils"
 
 export default function ProductDetailPage() {
   const params = useParams()

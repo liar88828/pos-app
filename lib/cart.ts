@@ -1,94 +1,131 @@
-import type { Product } from "./products"
+import { create } from 'zustand'
+import type { Product } from './products'
 
 export interface CartItem {
-  product: Product
-  quantity: number
-  subtotal: number
+	product: Product
+	quantity: number
+	subtotal: number
 }
 
 export interface Cart {
-  items: CartItem[]
-  total: number
-  itemCount: number
+	items: CartItem[]
+	total: number
+	itemCount: number
 }
 
-export function addToCart(cart: Cart, product: Product, quantity = 1): Cart {
-  const existingItemIndex = cart.items.findIndex((item) => item.product.id === product.id)
-
-  if (existingItemIndex >= 0) {
-    // Update existing item
-    const updatedItems = [...cart.items]
-    updatedItems[existingItemIndex].quantity += quantity
-    updatedItems[existingItemIndex].subtotal = updatedItems[existingItemIndex].quantity * product.price
-
-    return {
-      items: updatedItems,
-      total: updatedItems.reduce((sum, item) => sum + item.subtotal, 0),
-      itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-    }
-  } else {
-    // Add new item
-    const newItem: CartItem = {
-      product,
-      quantity,
-      subtotal: product.price * quantity,
-    }
-
-    const updatedItems = [...cart.items, newItem]
-
-    return {
-      items: updatedItems,
-      total: updatedItems.reduce((sum, item) => sum + item.subtotal, 0),
-      itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-    }
-  }
+interface CartState {
+	cart: Cart
+	addToCart: (product: Product, quantity?: number) => void
+	removeFromCart: (productId: string) => void
+	updateQuantity: (productId: string, quantity: number) => void
+	clearCart: () => void
 }
 
-export function removeFromCart(cart: Cart, productId: string): Cart {
-  const updatedItems = cart.items.filter((item) => item.product.id !== productId)
+export const useCartStore = create<CartState>((set) => ({
+	cart: {
+		items: [],
+		total: 0,
+		itemCount: 0,
+	},
 
-  return {
-    items: updatedItems,
-    total: updatedItems.reduce((sum, item) => sum + item.subtotal, 0),
-    itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-  }
-}
+	addToCart: (product, quantity = 1) =>
+		set((state) => {
+			const existingItemIndex = state.cart.items.findIndex(
+				(item) => item.product.id === product.id,
+			)
 
-export function updateQuantity(cart: Cart, productId: string, quantity: number): Cart {
-  if (quantity <= 0) {
-    return removeFromCart(cart, productId)
-  }
+			let updatedItems: CartItem[]
 
-  const updatedItems = cart.items.map((item) => {
-    if (item.product.id === productId) {
-      return {
-        ...item,
-        quantity,
-        subtotal: item.product.price * quantity,
-      }
-    }
-    return item
-  })
+			if (existingItemIndex >= 0) {
+				updatedItems = [...state.cart.items]
+				updatedItems[existingItemIndex].quantity += quantity
+				updatedItems[existingItemIndex].subtotal =
+					updatedItems[existingItemIndex].quantity * product.price
+			} else {
+				const newItem: CartItem = {
+					product,
+					quantity,
+					subtotal: product.price * quantity,
+				}
+				updatedItems = [...state.cart.items, newItem]
+			}
 
-  return {
-    items: updatedItems,
-    total: updatedItems.reduce((sum, item) => sum + item.subtotal, 0),
-    itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-  }
-}
+			return {
+				cart: {
+					items: updatedItems,
+					total: updatedItems.reduce((sum, item) => sum + item.subtotal, 0),
+					itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
+				},
+			}
+		}),
 
-export function clearCart(): Cart {
-  return {
-    items: [],
-    total: 0,
-    itemCount: 0,
-  }
-}
+	removeFromCart: (productId) =>
+		set((state) => {
+			const updatedItems = state.cart.items.filter(
+				(item) => item.product.id !== productId,
+			)
+
+			return {
+				cart: {
+					items: updatedItems,
+					total: updatedItems.reduce((sum, item) => sum + item.subtotal, 0),
+					itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
+				},
+			}
+		}),
+
+	updateQuantity: (productId, quantity) =>
+		set((state) => {
+			if (quantity <= 0) {
+				const updatedItems = state.cart.items.filter(
+					(item) => item.product.id !== productId,
+				)
+				return {
+					cart: {
+						items: updatedItems,
+						total: updatedItems.reduce((sum, item) => sum + item.subtotal, 0),
+						itemCount: updatedItems.reduce(
+							(sum, item) => sum + item.quantity,
+							0,
+						),
+					},
+				}
+			}
+
+			const updatedItems = state.cart.items.map((item) =>
+				item.product.id === productId
+					? {
+							...item,
+							quantity,
+							subtotal: item.product.price * quantity,
+					  }
+					: item,
+			)
+
+			return {
+				cart: {
+					items: updatedItems,
+					total: updatedItems.reduce((sum, item) => sum + item.subtotal, 0),
+					itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
+				},
+			}
+		}),
+
+	clearCart: () => {
+		set({
+			cart: {
+				items: [],
+				total: 0,
+				itemCount: 0,
+			},
+		})
+	},
+}))
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount)
+	return new Intl.NumberFormat('id-ID', {
+		style: 'currency',
+		currency: 'IDR',
+		minimumFractionDigits: 0,
+	}).format(amount)
 }

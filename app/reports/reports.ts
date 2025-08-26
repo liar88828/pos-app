@@ -1,4 +1,4 @@
-import { products } from "./products"
+import { products } from "@/app/products/product-assets"
 
 export interface Transaction {
   id: string
