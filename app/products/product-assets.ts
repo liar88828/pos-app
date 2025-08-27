@@ -9,7 +9,8 @@ export interface Product {
 	description: string
 }
 
-export const products: Product[] = [
+
+export const products = (): Product[] => [
 	{
 		id: '1',
 		name: 'Coca Cola 330ml',

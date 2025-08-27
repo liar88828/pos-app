@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
+import { Navbar } from "@/components/navbar";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 export const metadata: Metadata = {
 	title: 'v0 App',
@@ -10,16 +12,22 @@ export const metadata: Metadata = {
 	generator: 'v0.app',
 }
 
-export default function RootLayout({
-	children,
-}: Readonly<{
-	children: React.ReactNode
-}>) {
+export default function RootLayout(
+	{ children }: Readonly<{ children: React.ReactNode }>
+) {
 	return (
 		<html lang='en'>
-			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-				{children}
-			</body>
+		<body className={ `font-sans ${ GeistSans.variable } ${ GeistMono.variable }` }>
+		<div className='min-h-screen bg-background'>
+			<Navbar />
+			<div className='container mx-auto px-4 sm:px-0  py-6'>
+				<Breadcrumb />
+				<div className='space-y-6'>
+					{ children }
+				</div>
+			</div>
+		</div>
+		</body>
 		</html>
 	)
 }

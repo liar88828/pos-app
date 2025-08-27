@@ -1,26 +1,24 @@
 "use client"
 
 import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ShoppingCart, Package, Barcode, Minus, Plus } from "lucide-react"
-import { formatCurrency } from "@/lib/cart"
+import { Barcode, Minus, Package, Plus, ShoppingCart } from "lucide-react"
+import { formatCurrency } from "@/store/cart-store"
 import { Navbar } from "@/components/navbar"
 import { Breadcrumb } from "@/components/breadcrumb"
 import Link from "next/link"
-import { getProductById } from "./product-utils"
+import { Product } from "@/app/products/product-assets";
 
-export default function ProductDetailPage() {
-  const params = useParams()
+export default function ProductDetailPage({ product }: { product: Product }) {
   const router = useRouter()
   const [quantity, setQuantity] = useState(1)
 
-  const product = getProductById(params.id as string)
 
   if (!product) {
     return (
