@@ -5,29 +5,38 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, } from '@/components/ui/dialog'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger
+} from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select'
 import { formatCurrency } from '@/store/cart-store'
 import { AlertTriangle, Edit, Package, Plus, Search, Trash2, } from 'lucide-react'
 import { Product } from './product-assets'
-import { categories } from './product-utils'
 import { useProductFormStore } from "@/store/productForm-store";
 import { productSanitizer, useProductStore } from "@/store/product-store";
-import { DialogDescription } from "@radix-ui/react-dialog";
+import { useSettingStore } from "@/store/setting-store";
+import { useRouter } from "next/navigation";
 
-export default function ProductsPage(
-	// { products }: { products: Product[] }
-) {
+export default function ProductsPage() {
+	const router = useRouter()
+
+	const { categoryProduct, lowStock } = useSettingStore()
+	const { formData, resetForm, setFormData } = useProductFormStore()
+	const { products, deleteProduct, updateProduct, addProduct } = useProductStore()
+
 	const [ searchTerm, setSearchTerm ] = useState('')
 	const [ selectedCategory, setSelectedCategory ] = useState('Semua')
 	const [ sortBy, setSortBy ] = useState('name')
 	const [ isAddDialogOpen, setIsAddDialogOpen ] = useState(false)
 	const [ editingProduct, setEditingProduct ] = useState(false)
 	const [ idProduct, setIdProduct ] = useState<string | null>(null)
-	const { formData, resetForm, setFormData } = useProductFormStore()
-	const { products, deleteProduct, updateProduct, addProduct } = useProductStore()
 
 	// Filter and sort products
 	const filteredProducts = useMemo(() => {
@@ -60,12 +69,10 @@ export default function ProductsPage(
 	}, [ products, searchTerm, selectedCategory, sortBy ])
 
 	// Low stock products
-	const lowStockProducts = products.filter((product) => product.stock <= 10)
+	const lowStockProducts = products.filter((product) => product.stock <= lowStock)
 
 	const handleAddProduct = () => {
 		if (!formData.name || !formData.price || !formData.category) return
-
-		// setProductList([ ...productList, newProduct ])
 		addProduct(productSanitizer(formData))
 		resetForm()
 		setIsAddDialogOpen(false)
@@ -73,7 +80,6 @@ export default function ProductsPage(
 
 	const handleEditProduct = (id: string) => {
 		if (
-			// !editingProduct ||
 			!formData.name ||
 			!formData.price ||
 			!formData.category
@@ -107,7 +113,7 @@ export default function ProductsPage(
 	}
 
 	return ( <>
-
+			{/* Dialog Update product*/ }
 			{ idProduct &&
 				<Dialog
 					open={ editingProduct }
@@ -127,11 +133,12 @@ export default function ProductsPage(
 				</Dialog>
 			}
 
+			{/*Search Product */ }
 			<Card>
 				<CardHeader>
 					<CardTitle> Manajemen Produk </CardTitle>
 					<CardDescription>
-						Kelola semua produk dalam sistem POS Anda{ ' ' }
+						Kelola semua produk dalam sistem POS Anda
 					</CardDescription>
 				</CardHeader>
 
@@ -159,11 +166,9 @@ export default function ProductsPage(
 								<SelectValue placeholder='Pilih kategori' />
 							</SelectTrigger>
 							<SelectContent>
-								{ categories.map((category) => (
-									<SelectItem
-										key={ category }
-										value={ category }
-									>
+								<SelectItem value={ 'Semua' }>Semua</SelectItem>
+								{ categoryProduct.map((category) => (
+									<SelectItem key={ category } value={ category }>
 										{ category }
 									</SelectItem>
 								)) }
@@ -227,10 +232,7 @@ export default function ProductsPage(
 									className='cursor-pointer'
 									variant={ 'destructive' }
 									size={ 'sm' }
-									onClick={ () => {
-										setSearchTerm(product.name)
-									} }
-									key={ product.id }
+									onClick={ () => setSearchTerm(product.name) } key={ product.id }
 								>
 									{ product.name } ({ product.stock } tersisa)
 								</Button>
@@ -250,6 +252,9 @@ export default function ProductsPage(
 						<CardContent className='p-2'>
 							<div className='aspect-square bg-muted rounded-md mb-2 overflow-hidden relative'>
 								<img
+									onClick={ () => {
+										router.push(`/products/${ product.id }`)
+									} }
 									src={ product.image || '/placeholder.svg' }
 									alt={ product.name }
 									className='w-full h-full object-cover'
@@ -327,6 +332,7 @@ function ProductForm(
 		submitLabel: string
 	}) {
 	const { formData, setField, } = useProductFormStore()
+	const { categoryProduct } = useSettingStore()
 	return (
 		<div className='space-y-4'>
 			<div>
@@ -343,13 +349,19 @@ function ProductForm(
 				<div>
 					<Label htmlFor='price'>Harga *</Label>
 					<Input
-						id='price'
-						type='number'
-						value={ formData.price }
-						onChange={ (e) =>
-							setField('price', e.target.value)
+						id="price"
+						type="text" // <-- change here
+						inputMode="numeric"
+						value={
+							formData.price
+								? parseInt(formData.price).toLocaleString("id-ID") // formatted with dot
+								: ""
 						}
-						placeholder='0'
+						onChange={ (e) => {
+							const raw = e.target.value.replace(/\D/g, ""); // remove non-digits
+							setField("price", raw === "" ? "0" : raw);
+						} }
+						placeholder="0"
 					/>
 				</div>
 				<div>
@@ -378,7 +390,7 @@ function ProductForm(
 						<SelectValue placeholder='Pilih kategori' />
 					</SelectTrigger>
 					<SelectContent>
-						{ categories.map((category) => (
+						{ categoryProduct.map((category) => (
 							<SelectItem
 								key={ category }
 								value={ category }

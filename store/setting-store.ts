@@ -6,14 +6,14 @@ export interface SettingState {
 	storeName: string
 	cashierName: string
 	tax: number
+	lowStock: number
+	categoryProduct: string[] // 👈 tambahin ini
 }
-
 
 interface SettingStore extends SettingState {
 	setSetting: <K extends keyof SettingState>(key: K, value: SettingState[K]) => void
 	resetSettings: () => void
 }
-
 
 export const useSettingStore = create<SettingStore>()(
 	persist(
@@ -21,12 +21,13 @@ export const useSettingStore = create<SettingStore>()(
 			storeName: "My Store",
 			cashierName: "Cashier",
 			tax: 10,
+			lowStock: 10,
+			categoryProduct: [ "Food", "Drink", "Accessories" ], // 👈 default
 
 			setSetting: (key, value) =>
 				set((state) => ( {
-					storeName: key === "storeName" ? ( value as string ) : state.storeName,
-					cashierName: key === "cashierName" ? ( value as string ) : state.cashierName,
-					tax: key === "tax" ? ( value as number ) : state.tax,
+					...state,
+					[key]: value, // lebih ringkas, bisa handle semua key termasuk array
 				} )),
 
 			resetSettings: () =>
@@ -34,6 +35,7 @@ export const useSettingStore = create<SettingStore>()(
 					storeName: "My Store",
 					cashierName: "Cashier",
 					tax: 10,
+					categoryProduct: [ "Food", "Drink", "Accessories" ], // 👈 reset ke default
 				} )),
 		} ),
 		{

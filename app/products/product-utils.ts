@@ -1,6 +1,6 @@
 import { Product } from "./product-assets"
 
-export const categories = ['Semua', 'Makanan', 'Minuman', 'Perawatan']
+// export const categories = ['Semua', 'Makanan', 'Minuman', 'Perawatan']
 
 export function getProductById(id: string, products: Product[]): Product | undefined {
 	return products.find((product) => product.id === id)

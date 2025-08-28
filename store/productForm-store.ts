@@ -14,7 +14,6 @@ export interface FormDataProduct {
 
 
 interface FormStore {
-
 	formData: FormDataProduct
 	setField: (key: keyof FormDataProduct, value: string) => void
 	resetForm: () => void,

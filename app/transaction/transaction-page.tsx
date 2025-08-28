@@ -33,7 +33,7 @@ import {
 } from 'lucide-react'
 
 import { formatCurrency, useCartStore } from '@/store/cart-store'
-import { categories, getProductById, getProductsByCategory, searchProducts, } from '../products/product-utils'
+import { getProductById, getProductsByCategory, searchProducts, } from '../products/product-utils'
 import { Product } from "@/app/products/product-assets";
 import { useTransactionStore } from "@/store/transaction-store";
 import { useProductStore } from "@/store/product-store";
@@ -42,21 +42,16 @@ import { useSettingStore } from "@/store/setting-store";
 export default function TransactionPage(
 	// { products }: { products: Product[] }
 ) {
-	const { products } = useProductStore()
-	const { tax, cashierName } = useSettingStore()
-
-	const searchParams = useSearchParams()
 	const router = useRouter()
+	const searchParams = useSearchParams()
+	const today = new Date().toISOString().slice(0, 16)
 
-	const {
-		cart,
-		addToCart: addProduct,
-		removeFromCart: removeProduct,
-		updateQuantity: updateProductQuantity,
-		clearCart: clearAllItems,
-	} = useCartStore()
-
+	const { categoryProduct } = useSettingStore()
+	const { products, updateProduct } = useProductStore()
+	const { tax, cashierName, lowStock } = useSettingStore()
+	const { cart, addToCart, removeFromCart, updateQuantity, clearCart, } = useCartStore()
 	const { addTransaction } = useTransactionStore()
+
 	const [ searchQuery, setSearchQuery ] = useState('')
 	const [ searchResults, setSearchResults ] = useState(products)
 	const [ paymentMethod, setPaymentMethod ] = useState('')
@@ -64,7 +59,6 @@ export default function TransactionPage(
 	const [ isCheckoutOpen, setIsCheckoutOpen ] = useState(false)
 	const [ customerNotes, setCustomerNotes ] = useState('')
 	const [ selectedCategory, setSelectedCategory ] = useState('Semua')
-	const today = new Date().toISOString().split("T")[0]
 	const [ date, setDate ] = useState<string>(today)
 
 	// Handle product from URL params (from product detail page)
@@ -75,10 +69,10 @@ export default function TransactionPage(
 		if (productId) {
 			const product = getProductById(productId, products)
 			if (product) {
-				addProduct(product, quantity ? Number.parseInt(quantity) : 1)
+				addToCart(product, quantity ? Number.parseInt(quantity) : 1)
 			}
 		}
-	}, [ searchParams, addProduct, products ])
+	}, [ searchParams, addToCart, products ])
 
 	// Handle search
 	useEffect(() => {
@@ -94,14 +88,14 @@ export default function TransactionPage(
 	}, [ searchQuery, selectedCategory, products ])
 
 	const handleAddToCart = (product: Product) => {
-		addProduct(product, 1)
+		addToCart(product, 1)
 	}
 
 	const handleQuantityChange = (productId: string, newQuantity: number) => {
 		if (newQuantity <= 0) {
-			// removeProduct(productId)
+			// removeFromCart(productId)
 		} else {
-			updateProductQuantity(productId, newQuantity)
+			updateQuantity(productId, newQuantity)
 		}
 	}
 
@@ -123,14 +117,20 @@ export default function TransactionPage(
 			}`,
 		)
 		const subTotal = cart.items.reduce((a, b) => a + b.subtotal, 0)
+
 		addTransaction({
-			items: cart.items.map(i => ( {
-				total: i.subtotal,
-				quantity: i.quantity,
-				price: i.product.price,
-				productId: i.product.id,
-				productName: i.product.name
-			} )),
+			items: cart.items.map(i => {
+				updateProduct(i.product.id, {
+					stock: i.product.stock - i.quantity,
+				})
+				return {
+					total: i.subtotal,
+					quantity: i.quantity,
+					price: i.product.price,
+					productId: i.product.id,
+					productName: i.product.name
+				}
+			}),
 			date: new Date(date),
 			cashierName: cashierName,
 			paymentMethod: paymentMethod,
@@ -140,7 +140,7 @@ export default function TransactionPage(
 			actualPrice: Number(cashAmount)
 		})
 
-		clearAllItems()
+		clearCart()
 		setIsCheckoutOpen(false)
 		setPaymentMethod('')
 		setCashAmount('')
@@ -178,7 +178,7 @@ export default function TransactionPage(
 								/>
 
 								<div className='flex gap-2 flex-wrap'>
-									{ categories.map((category) => (
+									{ categoryProduct.map((category) => (
 										<Button
 											key={ category }
 											variant={
@@ -240,12 +240,9 @@ export default function TransactionPage(
 														Stock
 													</p>
 													<Badge
-														variant={
-															product.stock < 10 ? 'destructive' : 'secondary'
-														}
+														variant={ product.stock < lowStock ? 'destructive' : 'secondary' }
 														className='text-xs'
-													>
-														{ product.stock }
+													>{ product.stock }
 													</Badge>
 												</div>
 												<Button
@@ -280,7 +277,7 @@ export default function TransactionPage(
 									<Button
 										variant='destructive'
 										size='icon'
-										onClick={ clearAllItems }
+										onClick={ clearCart }
 									>
 										<Trash2 className='w-4 h-4' />
 									</Button>
@@ -313,6 +310,9 @@ export default function TransactionPage(
 													className='size-16 bg-muted rounded-md overflow-hidden flex-shrink-0'
 												>
 													<img
+														onClick={ () => {
+															router.push(`/products/${ item.product.id }`)
+														} }
 														src={ item.product.image || '/placeholder.svg' }
 														alt={ item.product.name }
 														className='w-full h-full object-cover'
@@ -334,7 +334,7 @@ export default function TransactionPage(
 															variant='ghost'
 															size='icon'
 															className={ 'w-7 h-7' }
-															onClick={ () => removeProduct(item.product.id) }
+															onClick={ () => removeFromCart(item.product.id) }
 														>
 															<XIcon />
 														</Button>
@@ -381,7 +381,7 @@ export default function TransactionPage(
 											{/*	<Button*/ }
 											{/*		variant='ghost'*/ }
 											{/*		size='icon'*/ }
-											{/*		onClick={ () => removeProduct(item.product.id) }*/ }
+											{/*		onClick={ () => removeFromCart(item.product.id) }*/ }
 											{/*	>*/ }
 											{/*		<Trash2 className='w-3 h-3' />*/ }
 											{/*	</Button>*/ }
@@ -469,11 +469,11 @@ export default function TransactionPage(
 											</div>
 
 											<div>
-												<Label htmlFor="date">Tanggal Transaksi</Label>
+												<Label htmlFor="date">Tanggal & Waktu Transaksi</Label>
 												<Input
-													className={ 'w-full' }
+													className="w-full"
 													id="date"
-													type="date"
+													type="datetime-local"
 													value={ date }
 													onChange={ (e) => setDate(e.target.value) }
 												/>

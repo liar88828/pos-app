@@ -42,7 +42,6 @@ import {
 	YAxis,
 } from 'recharts'
 import { products } from '../products/product-assets'
-import { categories } from '../products/product-utils'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -53,28 +52,36 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { COLORS } from "@/lib/color";
 import { useTransactionStore } from "@/store/transaction-store";
 import { useProductStore } from "@/store/product-store";
+import { useSettingStore } from "@/store/setting-store";
 
 export default function ReportsPage() {
-
-	const { transactions: dataTransactions } = useTransactionStore()
-	const { products: dataProducts } = useProductStore()
-
 	const router = useRouter()
 	const searchParams = useSearchParams()
 	const selectedPeriod = searchParams.get("period") || "7"
 
-	const dailySalesData = getDailySalesReport(Number.parseInt(selectedPeriod ?? '7'),
-		dataTransactions)
+	const { categoryProduct } = useSettingStore()
+	const { transactions: dataTransactions } = useTransactionStore()
+	const { products: dataProducts } = useProductStore()
+
+	const dailySalesData = getDailySalesReport(Number(selectedPeriod ?? '7'), dataTransactions)
 	const productSalesData = getProductSalesReport(dataTransactions)
 	const paymentMethodData = getPaymentMethodBreakdown(dataTransactions)
 
 	const totalRevenue = getTotalRevenue(dataTransactions)
 	const totalTransactions = getTotalTransactions(dataTransactions)
 	const averageTransaction = getAverageTransactionValue(dataTransactions)
-
 	const [ selectedTab, setSelectedTab ] = useState('overview')
 
-// const [dataProducts, _setProductList] = useState<Product[]>(products)
+	const handleExportReport = (type: string) => {
+		// Mock export functionality
+		alert(`Mengekspor laporan ${ type }... (Fitur akan diimplementasi)`)
+	}
+
+	const handleSelect = (value: string) => {
+		const params = new URLSearchParams(searchParams.toString())
+		params.set("period", value)
+		router.push(`?${ params.toString() }`)
+	}
 
 	// Mock statistics for dashboard
 	const stats = {
@@ -87,24 +94,14 @@ export default function ReportsPage() {
 	// Calculate growth (mock data for demonstration)
 	const revenueGrowth = 12.5
 	const transactionGrowth = 8.3
-
-	const handleExportReport = (type: string) => {
-		// Mock export functionality
-		alert(`Mengekspor laporan ${ type }... (Fitur akan diimplementasi)`)
-	}
-
 	const lowStockProducts = dataProducts.filter((product) => product.stock <= 10)
 
-	const handleSelect = (value: string) => {
-		const params = new URLSearchParams(searchParams.toString())
-		params.set("period", value)
-		router.push(`?${ params.toString() }`)
-	}
 	return (
 		<>
 
 			<div className='mb-6'>
 				<div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
+
 					<div>
 						<h1 className='text-3xl font-bold text-foreground mb-2'>
 							Laporan Penjualan
@@ -113,6 +110,7 @@ export default function ReportsPage() {
 							Analisis performa bisnis dan tren penjualan
 						</p>
 					</div>
+
 					<div className='flex gap-2'>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
@@ -160,7 +158,7 @@ export default function ReportsPage() {
 					className='space-y-6'
 				>
 					{/* Stats Cards */ }
-					<div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
+					<div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6'>
 
 						<ReportCard
 							title={ 'Total Nilai Stok' }
@@ -226,7 +224,7 @@ export default function ReportsPage() {
 						<ReportCard
 							title={ 'Kategori' }
 							icon={ SquareStackIcon }
-							value={ categories.length }
+							value={ categoryProduct.length }
 							description={ <>
 								{/*<TrendingUp className='h-4 w-4 text-green-500 mr-1 inline' />*/ }
 								{/*<span className='text-sm text-green-500'>+{ revenueGrowth }%</span>*/ }
@@ -560,11 +558,11 @@ export function ReportCard(props: {
 	return (
 		<Card>
 			<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-				<CardTitle className='text-sm font-medium'>{ props.title }</CardTitle>
-				<props.icon className={ 'h-8 w-8 text-primary' } />
+				<CardTitle className=' text-xs sm:text-sm font-medium'>{ props.title }</CardTitle>
+				<props.icon className={ 'h-5 w-5 sm:h-8 sm:w-8 text-primary' } />
 			</CardHeader>
 			<CardContent>
-				<div className='text-2xl font-bold'>{ props.value }</div>
+				<div className='text-base sm:text-2xl font-bold'>{ props.value }</div>
 				<p className='text-xs text-muted-foreground'>{ props.description }</p>
 			</CardContent>
 		</Card>

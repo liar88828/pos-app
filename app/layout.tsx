@@ -7,7 +7,7 @@ import { Navbar } from "@/components/navbar";
 import { Breadcrumb } from "@/components/breadcrumb";
 
 export const metadata: Metadata = {
-	title: 'v0 App',
+	title: 'Post System',
 	description: 'Created with v0',
 	generator: 'v0.app',
 }

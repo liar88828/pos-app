@@ -21,19 +21,24 @@ interface CartState {
 	addToCart: (product: Product, quantity?: number) => void
 	removeFromCart: (productId: string) => void
 	updateQuantity: (productId: string, quantity: number) => void
-	clearCart: () => void
+	clearCart: () => void,
+	getCart: (id: string) => CartItem | undefined
+
 }
 
 
 export const useCartStore = create<CartState>()(
 	persist(
-		(set) => ( {
+		(set, get) => ( {
+
 			cart: {
 				items: [],
 				total: 0,
 				itemCount: 0,
 			},
-
+			getCart: (id) => {
+				return get().cart.items.find((p) => p.product.id === id)
+			},
 			addToCart: (product, quantity = 1) =>
 				set((state) => {
 					const existingItemIndex = state.cart.items.findIndex(
