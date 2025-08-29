@@ -1,6 +1,6 @@
-import { Product } from '@/app/products/product-assets'
 import { create } from 'zustand'
 import { persist } from "zustand/middleware";
+import { Product } from "@/store/product-store";
 
 
 export interface CartItem {
@@ -15,6 +15,7 @@ export interface CartStore {
 	total: number
 	itemCount: number
 }
+
 
 interface CartState {
 	cart: CartStore
@@ -145,6 +146,16 @@ export const useCartStore = create<CartState>()(
 		}
 	)
 )
+
+export const formatDate = (date: string | Date | number) => {
+	return new Date(date).toLocaleDateString('id-ID', {
+		year: 'numeric',
+		weekday: 'long',
+		month: 'short',
+		day: 'numeric',
+	})
+}
+
 export function formatCurrency(amount: number): string {
 	return new Intl.NumberFormat('id-ID', {
 		style: 'currency',

@@ -1,6 +1,5 @@
-import { Product } from "./product-assets"
+import { Product } from "@/store/product-store";
 
-// export const categories = ['Semua', 'Makanan', 'Minuman', 'Perawatan']
 
 export function getProductById(id: string, products: Product[]): Product | undefined {
 	return products.find((product) => product.id === id)
@@ -18,4 +17,8 @@ export function searchProducts(query: string, products: Product[]): Product[] {
 			product.name.toLowerCase().includes(lowercaseQuery) ||
 			product.barcode.includes(query),
 	)
+}
+
+export function getLowStockProduct(products: Product[], lowStock: number) {
+	return products.filter((product) => product.stock <= lowStock).length
 }

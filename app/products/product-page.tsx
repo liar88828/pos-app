@@ -18,9 +18,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select'
 import { formatCurrency } from '@/store/cart-store'
 import { AlertTriangle, Edit, Package, Plus, Search, Trash2, } from 'lucide-react'
-import { Product } from './product-assets'
 import { useProductFormStore } from "@/store/productForm-store";
-import { productSanitizer, useProductStore } from "@/store/product-store";
+import { Product, productSanitizer, useProductStore } from "@/store/product-store";
 import { useSettingStore } from "@/store/setting-store";
 import { useRouter } from "next/navigation";
 

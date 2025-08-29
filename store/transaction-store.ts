@@ -12,7 +12,8 @@ export interface Transaction {
 		productName: string
 		quantity: number
 		price: number
-		total: number
+		total: number,
+		productCategory: string
 	}[]
 	subtotal: number
 	tax: number

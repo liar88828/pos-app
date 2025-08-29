@@ -32,11 +32,10 @@ import {
 	XIcon,
 } from 'lucide-react'
 
-import { formatCurrency, useCartStore } from '@/store/cart-store'
 import { getProductById, getProductsByCategory, searchProducts, } from '../products/product-utils'
-import { Product } from "@/app/products/product-assets";
+import { formatCurrency, useCartStore } from '@/store/cart-store'
 import { useTransactionStore } from "@/store/transaction-store";
-import { useProductStore } from "@/store/product-store";
+import { Product, useProductStore } from "@/store/product-store";
 import { useSettingStore } from "@/store/setting-store";
 
 export default function TransactionPage(
@@ -99,14 +98,17 @@ export default function TransactionPage(
 		}
 	}
 
+	const totalTax = cart.total * ( tax / 100 )
+	const totalAll = cart.total + totalTax
+
 	const calculateChange = () => {
 		const cash = Number.parseFloat(cashAmount) || 0
-		return cash - cart.total
+		return cash - totalAll
 	}
+
 
 	const handleCheckout = () => {
 		// Simulate transaction processing
-
 		alert(
 			`Transaksi berhasil!
 			\nTotal: ${ formatCurrency(cart.total,) }
@@ -128,15 +130,16 @@ export default function TransactionPage(
 					quantity: i.quantity,
 					price: i.product.price,
 					productId: i.product.id,
-					productName: i.product.name
+					productName: i.product.name,
+					productCategory: i.product.category,
 				}
 			}),
 			date: new Date(date),
 			cashierName: cashierName,
 			paymentMethod: paymentMethod,
 			subtotal: subTotal,
-			tax: tax,
-			total: cart.total,
+			tax: totalTax,
+			total: totalAll,
 			actualPrice: Number(cashAmount)
 		})
 
@@ -479,17 +482,6 @@ export default function TransactionPage(
 												/>
 											</div>
 
-											{/*<div>*/ }
-											{/*	<Label htmlFor="tax">Pajak (%)</Label>*/ }
-											{/*	<Input*/ }
-											{/*		id="tax"*/ }
-											{/*		type="number"*/ }
-											{/*		min="0"*/ }
-											{/*		value={ tax }*/ }
-											{/*		onChange={ (e) => setTax(Number(e.target.value)) }*/ }
-											{/*	/>*/ }
-											{/*</div>*/ }
-
 											{ paymentMethod === 'cash' && (
 												<div>
 													<Label>Jumlah Uang Tunai</Label>
@@ -503,14 +495,12 @@ export default function TransactionPage(
 														<div className='mt-2 p-2 bg-muted rounded'>
 															<div className='flex justify-between text-sm'>
 																<span>Total:</span>
-																<span>{ formatCurrency(cart.total) }</span>
+																<span>{ formatCurrency(totalAll) }</span>
 															</div>
 															<div className='flex justify-between text-sm'>
 																<span>Dibayar:</span>
 																<span>
-																		{ formatCurrency(
-																			Number.parseFloat(cashAmount) || 0,
-																		) }
+																		{ formatCurrency(Number.parseFloat(cashAmount) || 0,) }
 																	</span>
 															</div>
 															<Separator className='my-1' />
